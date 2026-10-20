@@ -1,0 +1,4 @@
+Coloque aqui SOMENTE arquivos que podem ser distribuídos livremente
+(homebrew liberado pelo autor, freeware, domínio público, demos autorizadas).
+Antes de adicionar, confira a licença na página original do autor e
+registre o link em src/data/freeGames.js (campos license e sourceUrl).

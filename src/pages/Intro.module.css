@@ -1,0 +1,305 @@
+.intro {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+/* 3D Grid with Game Covers */
+.grid3d {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(45deg) scale(1.5);
+  opacity: 0.3;
+  animation: scrollUp 30s linear infinite;
+}
+
+.gameCover {
+  position: absolute;
+  width: 200px;
+  height: 150px;
+  left: var(--x);
+  top: var(--y);
+  transform: translateZ(-500px) rotateY(var(--rotation, 0deg));
+  animation: float 8s ease-in-out infinite;
+  animation-delay: var(--delay);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.gameCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: slideCover 4s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes scrollUp {
+  0% {
+    transform: rotateX(45deg) scale(1.5) translateY(0);
+  }
+  100% {
+    transform: rotateX(45deg) scale(1.5) translateY(-100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateZ(-500px) translateY(0);
+  }
+  50% {
+    transform: translateZ(-300px) translateY(-20px);
+  }
+}
+
+@keyframes slideCover {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* CRT Overlay */
+.crtOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Scanlines */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 11;
+  animation: scanlinesMove 0.1s linear infinite;
+}
+
+@keyframes scanlinesMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
+/* Logo Container */
+.logoContainer {
+  position: relative;
+  z-index: 20;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+.logoGlow {
+  position: relative;
+  display: inline-block;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.logo {
+  width: 300px;
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes glow {
+  from {
+    filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
+  }
+  to {
+    filter: drop-shadow(0 0 50px rgba(0, 255, 255, 1)) drop-shadow(0 0 80px rgba(255, 0, 255, 0.8));
+  }
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.subtitle {
+  font-family: 'Press Start 2P', 'Orbitron', monospace;
+  font-size: 1rem;
+  color: #00ffff;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+  margin-top: 15px;
+}
+
+/* Enter Button */
+.enterBtn {
+  position: relative;
+  z-index: 20;
+  margin-top: 40px;
+  padding: 20px 60px;
+  font-family: 'Press Start 2P', 'Orbitron', monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00ffff;
+  background: transparent;
+  border: 3px solid #00ffff;
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  animation: btnPulse 1.5s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.enterBtn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+}
+
+.btnGlow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
+  z-index: -1;
+  filter: blur(15px);
+  opacity: 0.5;
+  animation: btnGlowRotate 3s linear infinite;
+}
+
+@keyframes btnPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+  }
+}
+
+@keyframes btnGlowRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btnText {
+  position: relative;
+  z-index: 1;
+}
+
+/* Skip Hint */
+.skipHint {
+  position: absolute;
+  bottom: 40px;
+  z-index: 20;
+  font-family: 'Press Start 2P', 'Orbitron', monospace;
+  font-size: 0.8rem;
+  color: #00ffff;
+  letter-spacing: 2px;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: 150px;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  .enterBtn {
+    padding: 12px 30px;
+    font-size: 0.9rem;
+  }
+
+  .gameCover {
+    width: 120px;
+    height: 90px;
+  }
+
+  .skipHint {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    width: 120px;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
+  .enterBtn {
+    padding: 10px 25px;
+    font-size: 0.8rem;
+  }
+
+  .gameCover {
+    width: 100px;
+    height: 75px;
+  }
+
+  .musicControl {
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 10px;
+  }
+
+  .volumeSlider {
+    width: 50px;
+  }
+}
