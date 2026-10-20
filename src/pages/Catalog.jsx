@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Heading } from '@/components/atoms'
 import { GameFilter, GameGrid } from '@/components/organisms'
 import { CatalogLayout } from '@/components/templates'
@@ -6,8 +7,13 @@ import { gamesData } from '@/data/gamesData'
 import { useAppStore } from '@/store/useAppStore'
 
 export default function Catalog() {
+  const [searchParams] = useSearchParams()
   const search = useAppStore((s) => s.search)
-  const [filters, setFilters] = useState({ system: '', genre: '', sort: 'popular' })
+  const [filters, setFilters] = useState({
+    system: searchParams.get('system') ?? '',
+    genre: '',
+    sort: 'popular',
+  })
   const [allGames, setAllGames] = useState(gamesData)
 
   // Tenta buscar da API; se falhar, usa os dados estáticos

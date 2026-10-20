@@ -50,8 +50,8 @@ export default function GameModal() {
               <X size={18} md:size={20} />
             </button>
 
-            <div className="aspect-video bg-gradient-to-br from-neon-magenta/30 to-neon-cyan/30">
-              <img src={game.coverUrl} alt={game.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <div className="w-full max-h-72 md:max-h-80 flex items-center justify-center bg-black/50 overflow-hidden">
+              <img src={game.coverUrl} alt={game.title} className="max-h-72 md:max-h-80 w-auto object-contain p-2" onError={(e) => (e.currentTarget.style.display = 'none')} />
             </div>
 
             <div className="p-4 md:p-6 space-y-4 md:space-y-5">

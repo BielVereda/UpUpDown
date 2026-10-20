@@ -62,20 +62,20 @@ export default function Intro() {
           <img src="/images/icons/logotipo.png" alt="UpUpDown" className={styles.logo} />
         </div>
         <p className={styles.subtitle}>ARCADE EXPERIENCE</p>
+
+        {/* Enter Button — abaixo do logo */}
+        {canSkip && (
+          <button onClick={handleEnter} className={styles.enterBtn}>
+            <span className={styles.btnText}>PRESS START</span>
+            <div className={styles.btnGlow} />
+          </button>
+        )}
+
+        {/* Loading hint */}
+        {!canSkip && (
+          <p className={styles.skipHint}>Loading...</p>
+        )}
       </div>
-
-      {/* Enter Button */}
-      {canSkip && (
-        <button onClick={handleEnter} className={styles.enterBtn}>
-          <span className={styles.btnText}>PRESS START</span>
-          <div className={styles.btnGlow} />
-        </button>
-      )}
-
-      {/* Skip Hint */}
-      {!canSkip && (
-        <p className={styles.skipHint}>Loading...</p>
-      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 export { default as Navbar } from './Navbar'
 export { default as Footer } from './Footer'
 export { default as GameGrid } from './GameGrid'
+export { default as GameCarousel } from './GameCarousel'
 export { default as GameFilter } from './GameFilter'
 export { default as GameModal } from './GameModal'
 export { default as HeroBanner } from './HeroBanner'

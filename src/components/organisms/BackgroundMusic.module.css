@@ -1,3 +1,4 @@
+/* ─── Music Control Widget ───────────────────────────────── */
 .musicControl {
   position: fixed;
   bottom: 20px;
@@ -5,25 +6,22 @@
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.8);
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.85);
   border: 2px solid #00ffff;
-  border-radius: 8px;
+  border-radius: 10px;
   backdrop-filter: blur(10px);
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
   animation: musicPulse 2s ease-in-out infinite;
 }
 
 @keyframes musicPulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+  50%       { box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); }
 }
 
+/* ─── Play / Pause button ────────────────────────────────── */
 .playBtn {
   background: transparent;
   border: none;
@@ -34,6 +32,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .playBtn:hover {
@@ -41,6 +40,26 @@
   transform: scale(1.1);
 }
 
+/* ─── Prev / Next track arrows ───────────────────────────── */
+.trackBtn {
+  background: transparent;
+  border: none;
+  color: #00ffff;
+  cursor: pointer;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.trackBtn:hover {
+  color: #ff00ff;
+  transform: scale(1.15);
+}
+
+/* ─── Volume Slider ──────────────────────────────────────── */
 .volumeSlider {
   width: 80px;
   height: 4px;
@@ -50,45 +69,121 @@
   border-radius: 2px;
   outline: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .volumeSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: #00ffff;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
   transition: all 0.3s ease;
 }
 
 .volumeSlider::-webkit-slider-thumb:hover {
   background: #ff00ff;
-  box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.8);
   transform: scale(1.2);
 }
 
 .volumeSlider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: #00ffff;
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
 }
 
+/* ─── Track label ────────────────────────────────────────── */
+.trackLabel {
+  font-family: 'Press Start 2P', 'Orbitron', monospace;
+  font-size: 0.55rem;
+  color: #00ffff;
+  letter-spacing: 1px;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+/* ─── Headphone hint ─────────────────────────────────────── */
+.headphoneHint {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #ff00ff;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+  cursor: pointer;
+  animation: hintSlideIn 0.4s ease;
+  max-width: 280px;
+}
+
+@keyframes hintSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.headphoneIcon {
+  color: #ff00ff;
+  flex-shrink: 0;
+}
+
+.headphoneHint span {
+  font-family: 'Press Start 2P', 'Orbitron', monospace;
+  font-size: 0.6rem;
+  color: #ff00ff;
+  letter-spacing: 1px;
+  line-height: 1.5;
+}
+
+.hintClose {
+  background: transparent;
+  border: none;
+  color: #ff00ff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.hintClose:hover {
+  color: #ffffff;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 768px) {
   .musicControl {
-    bottom: 10px;
-    right: 10px;
-    padding: 10px 12px;
+    bottom: 12px;
+    right: 12px;
+    padding: 8px 10px;
+    gap: 6px;
   }
 
-  .volumeSlider {
-    width: 60px;
+  .volumeSlider { width: 60px; }
+  .trackLabel   { display: none; }
+
+  .headphoneHint {
+    bottom: 62px;
+    right: 12px;
+    max-width: 240px;
   }
 }
 
@@ -96,14 +191,18 @@
   .musicControl {
     bottom: 8px;
     right: 8px;
-    padding: 8px 10px;
+    padding: 6px 8px;
   }
 
-  .volumeSlider {
-    width: 50px;
+  .volumeSlider { width: 50px; }
+
+  .playBtn { padding: 2px; }
+
+  .headphoneHint {
+    bottom: 56px;
+    right: 8px;
+    max-width: 200px;
   }
 
-  .playBtn {
-    padding: 2px;
-  }
+  .headphoneHint span { font-size: 0.5rem; }
 }
