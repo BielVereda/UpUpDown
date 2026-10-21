@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Play } from 'lucide-react'
 import { gamesData } from '@/data/gamesData'
 import styles from './Intro.module.css'
+import BackgroundMusic from '@/components/organisms/BackgroundMusic'
 
 export default function Intro() {
   const navigate = useNavigate()
   const [canSkip, setCanSkip] = useState(false)
+  const backgroundMusicRef = useRef(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setCanSkip(true), 2000)
@@ -14,6 +17,10 @@ export default function Intro() {
 
   const handleEnter = () => {
     console.log('Navigating to /home')
+    // Iniciar música aleatória ao clicar em Press Start
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.playRandom()
+    }
     navigate('/home')
   }
 
@@ -66,8 +73,8 @@ export default function Intro() {
         {/* Enter Button — abaixo do logo */}
         {canSkip && (
           <button onClick={handleEnter} className={styles.enterBtn}>
+            <Play size={24} className={styles.playIcon} />
             <span className={styles.btnText}>PRESS START</span>
-            <div className={styles.btnGlow} />
           </button>
         )}
 
@@ -76,6 +83,9 @@ export default function Intro() {
           <p className={styles.skipHint}>Loading...</p>
         )}
       </div>
+
+      {/* Background Music Component - só mostra headphone hint, sem controles */}
+      <BackgroundMusic ref={backgroundMusicRef} showControls={false} showHeadphoneHint={true} />
     </div>
   )
 }

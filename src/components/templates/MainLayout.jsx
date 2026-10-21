@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { CRTOverlay } from '@/components/atoms'
 import { Navbar, Footer, GameModal, BackgroundMusic } from '@/components/organisms'
 
 export default function MainLayout() {
@@ -15,8 +14,7 @@ export default function MainLayout() {
       <main className="flex-1"><Outlet /></main>
       <Footer />
       <GameModal />
-      <CRTOverlay />
-      <BackgroundMusic />
+      <BackgroundMusic showControls={true} showHeadphoneHint={false} />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Logo } from '@/components/atoms'
-import { SearchBar, CRTToggle } from '@/components/molecules'
+import { SearchBar } from '@/components/molecules'
 import { useAppStore } from '@/store/useAppStore'
 
 const links = [
@@ -30,14 +31,20 @@ export default function Navbar() {
                 `font-pixel text-[8px] md:text-[10px] transition-colors px-2 py-1 ${isActive ? 'text-neon-cyan' : 'text-ink-muted hover:text-ink'}`
               }
             >
-              {l.label}
+              {({ isActive }) => (
+                <motion.span
+                  whileHover={{ scale: 1.05, color: isActive ? '#00ffff' : '#9333ea' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {l.label}
+                </motion.span>
+              )}
             </NavLink>
           ))}
         </nav>
         <div className="flex-1 min-w-[120px] md:min-w-[160px] max-w-[200px] md:max-w-xs ml-auto order-2 md:order-none">
           <SearchBar value={search} onChange={setSearch} onSubmit={() => navigate('/catalogo')} />
         </div>
-        <CRTToggle />
       </div>
     </header>
   )

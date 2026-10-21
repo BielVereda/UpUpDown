@@ -8,10 +8,6 @@ export const useAppStore = create(
       search: '',
       setSearch: (search) => set({ search }),
 
-      // efeito CRT
-      crt: false,
-      toggleCRT: () => set({ crt: !get().crt }),
-
       // favoritos
       favorites: [],
       toggleFavorite: (id) =>
@@ -28,7 +24,7 @@ export const useAppStore = create(
     }),
     {
       name: 'uud-store',
-      partialize: (s) => ({ crt: s.crt, favorites: s.favorites }),
+      partialize: (s) => ({ favorites: s.favorites }),
     }
   )
 )

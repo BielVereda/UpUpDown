@@ -1,4 +1,5 @@
 import { Heart, Download } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Badge, Rating } from '@/components/atoms'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -39,7 +40,7 @@ export default function GameCard({ game, onClick, accentColor = 'cyan' }) {
   const ac            = ACCENT[accentColor] ?? ACCENT.cyan
 
   return (
-    <article
+    <motion.article
       className={`
         neon-card cursor-pointer group
         border border-white/10
@@ -49,6 +50,11 @@ export default function GameCard({ game, onClick, accentColor = 'cyan' }) {
         ${ac.hover}
       `}
       onClick={() => onClick?.(game)}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={{ scale: 1.03, transition: { duration: 0.3 } }}
+      whileTap={{ scale: 0.98 }}
     >
       {/* Capa */}
       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-bg to-bg-soft">
@@ -110,6 +116,6 @@ export default function GameCard({ game, onClick, accentColor = 'cyan' }) {
         </p>
         {game.rating && <Rating value={game.rating} />}
       </div>
-    </article>
+    </motion.article>
   )
 }

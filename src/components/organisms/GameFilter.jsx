@@ -21,7 +21,7 @@ export default function GameFilter({ filters, onChange }) {
       </label>
       <button
         onClick={() => onChange({ system: '', genre: '', sort: 'popular' })}
-        className="text-[10px] md:text-xs text-neon-magenta underline cursor-pointer"
+        className="w-full font-pixel text-[10px] md:text-xs text-neon-magenta border-2 border-neon-magenta rounded-md px-4 py-2 cursor-pointer hover:bg-neon-magenta/20 transition-all duration-200 shadow-neon-magenta"
       >
         Limpar filtros
       </button>

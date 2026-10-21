@@ -13,12 +13,6 @@
   border-radius: 10px;
   backdrop-filter: blur(10px);
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  animation: musicPulse 2s ease-in-out infinite;
-}
-
-@keyframes musicPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
-  50%       { box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); }
 }
 
 /* ─── Play / Pause button ────────────────────────────────── */
@@ -31,32 +25,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .playBtn:hover {
   color: #ff00ff;
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 /* ─── Prev / Next track arrows ───────────────────────────── */
 .trackBtn {
-  background: transparent;
-  border: none;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid #00ffff;
   color: #00ffff;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
 }
 
 .trackBtn:hover {
+  background: rgba(0, 255, 255, 0.2);
   color: #ff00ff;
-  transform: scale(1.15);
+  border-color: #ff00ff;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
 }
 
 /* ─── Volume Slider ──────────────────────────────────────── */
@@ -100,17 +99,58 @@
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
 }
 
-/* ─── Track label ────────────────────────────────────────── */
-.trackLabel {
+/* ─── Track name notifications ─────────────────────────────── */
+/* Container fixo: centraliza e empilha os avisos individuais */
+.trackNameContainer {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 90vw;
+  pointer-events: none;
+}
+
+/* Cada aviso é um elemento próprio, com animação própria */
+.trackNameFloat {
   font-family: 'Press Start 2P', 'Orbitron', monospace;
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   color: #00ffff;
-  letter-spacing: 1px;
-  max-width: 90px;
+  letter-spacing: 2px;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ffff;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  animation: trackNameFloat 3s ease-in-out forwards;
   white-space: nowrap;
+  max-width: 90vw;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.85;
+}
+
+@keyframes trackNameFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 }
 
 /* ─── Headphone hint ─────────────────────────────────────── */
@@ -178,12 +218,16 @@
   }
 
   .volumeSlider { width: 60px; }
-  .trackLabel   { display: none; }
 
   .headphoneHint {
     bottom: 62px;
     right: 12px;
     max-width: 240px;
+  }
+
+  .trackNameFloat {
+    font-size: 0.6rem;
+    padding: 10px 16px;
   }
 }
 

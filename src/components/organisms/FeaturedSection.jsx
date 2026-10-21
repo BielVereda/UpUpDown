@@ -1,4 +1,5 @@
 import { Heading } from '@/components/atoms'
+import { motion } from 'framer-motion'
 import GameCarousel from './GameCarousel'
 
 /**
@@ -10,7 +11,13 @@ import GameCarousel from './GameCarousel'
  */
 export default function FeaturedSection({ title, color = 'cyan', games, systemFilter, seeMoreLink }) {
   return (
-    <section className="space-y-5">
+    <motion.section
+      className="space-y-5"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+    >
       <Heading level={2} color={color}>{title}</Heading>
       <GameCarousel
         games={games}
@@ -18,6 +25,6 @@ export default function FeaturedSection({ title, color = 'cyan', games, systemFi
         systemFilter={systemFilter}
         seeMoreLink={seeMoreLink}
       />
-    </section>
+    </motion.section>
   )
 }

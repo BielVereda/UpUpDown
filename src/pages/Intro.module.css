@@ -103,7 +103,7 @@
 .logo {
   width: 300px;
   height: auto;
-  filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
+  filter: drop-shadow(0 0 30px rgba(147, 51, 234, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
   animation: logoFloat 3s ease-in-out infinite;
 }
 
@@ -118,10 +118,10 @@
 
 @keyframes glow {
   from {
-    filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
+    filter: drop-shadow(0 0 30px rgba(147, 51, 234, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.6));
   }
   to {
-    filter: drop-shadow(0 0 50px rgba(0, 255, 255, 1)) drop-shadow(0 0 80px rgba(255, 0, 255, 0.8));
+    filter: drop-shadow(0 0 50px rgba(147, 51, 234, 1)) drop-shadow(0 0 80px rgba(255, 0, 255, 0.8));
   }
 }
 
@@ -137,9 +137,9 @@
 .subtitle {
   font-family: 'Press Start 2P', 'Orbitron', monospace;
   font-size: 1rem;
-  color: #00ffff;
+  color: #9333ea;
   letter-spacing: 4px;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+  text-shadow: 0 0 20px rgba(147, 51, 234, 0.6);
   margin-top: 15px;
 }
 
@@ -161,6 +161,17 @@
   letter-spacing: 4px;
   animation: btnPulse 1.5s ease-in-out infinite;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.playIcon {
+  transition: transform 0.2s ease;
+}
+
+.enterBtn:hover .playIcon {
+  transform: scale(1.1);
 }
 
 .enterBtn:hover {
@@ -169,32 +180,12 @@
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
 }
 
-.btnGlow {
-  position: absolute;
-  inset: -4px;
-  border-radius: 12px;
-  background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
-  z-index: -1;
-  filter: blur(15px);
-  opacity: 0.5;
-  animation: btnGlowRotate 3s linear infinite;
-}
-
 @keyframes btnPulse {
   0%, 100% {
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
   }
   50% {
     box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
-  }
-}
-
-@keyframes btnGlowRotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
