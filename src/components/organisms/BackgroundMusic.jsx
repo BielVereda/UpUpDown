@@ -4,8 +4,10 @@ import styles from './BackgroundMusic.module.css'
 
 /**
  * Playlist de músicas — arquivos em /public/audio/
- * `file` = nome exato do arquivo | `label` = nome exibido no player
+ * `file` = nome EXATO do arquivo na pasta | `label` = nome exibido no player
  */
+const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`
+
 const PLAYLIST = [
   { file: 'Akira_Yamaoka__Theme_of_Laura_.mp3',               label: 'Silent Hill 2 — Theme of Laura' },
   { file: 'Chrono_Trigger__Main_Theme_.mp3',                  label: 'Chrono Trigger — Main Theme' },
@@ -25,10 +27,10 @@ const PLAYLIST = [
   { file: 'Zelda_-_Ocarina_of_Time__Main_Theme_.mp3',         label: 'Zelda: Ocarina of Time — Main Theme' },
 ].map(({ file, label }) => ({
   label,
-  src: `/audio/${file}`
+  src: `${AUDIO_BASE}${encodeURIComponent(file)}`
 }))
 
-// Duração de cada aviso de música (deve bater com a animação no CSS)
+// Duração de cada aviso (deve bater com a animação no CSS)
 const TOAST_DURATION = 3000
 // Máximo de avisos empilhados ao mesmo tempo
 const MAX_TOASTS = 3
@@ -49,26 +51,23 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
   const [volume, setVolume] = useState(0.3)
   const [showHeadphoneHint, setShowHeadphoneHint] = useState(showHeadphoneHintProp)
   const [trackToasts, setTrackToasts] = useState([]) // [{ id, label }]
-  const [shuffledPlaylist, setShuffledPlaylist] = useState([])
+  // Playlist embaralhada uma única vez, já disponível no primeiro render
+  const [shuffledPlaylist] = useState(() => shuffleArray(PLAYLIST))
   const audioRef = useRef(null)
 
-  // Controle dos avisos individuais de música
+  // Controle dos avisos individuais
   const toastIdRef = useRef(0)
   const toastTimersRef = useRef(new Set())
-  const isFirstTrackRef = useRef(true)
+  const prevTrackRef = useRef(null)
+  // Conta erros de carregamento seguidos (evita loop infinito se nenhum arquivo existir)
+  const errorCountRef = useRef(0)
 
-  const hasPlaylist = PLAYLIST.length > 0
+  const total = shuffledPlaylist.length
+  const hasPlaylist = total > 0
   const currentTrack = shuffledPlaylist[trackIndex] ?? null
 
-  // Embaralhar playlist na montagem
-  useEffect(() => {
-    setShuffledPlaylist(shuffleArray(PLAYLIST))
-  }, [])
-
-  // Cria um aviso NOVO e independente para cada troca de música.
-  // Cada aviso tem seu próprio id, sua própria animação e seu próprio timer,
-  // então trocar de faixa várias vezes seguidas não reaproveita nem quebra o anterior.
-  const pushTrackToast = (label) => {
+  /* ─── Avisos individuais ─────────────────────────────── */
+  const pushToast = (label) => {
     const id = ++toastIdRef.current
     setTrackToasts((prev) => [...prev, { id, label }].slice(-MAX_TOASTS))
 
@@ -79,17 +78,19 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
     toastTimersRef.current.add(timer)
   }
 
-  // Dispara um aviso sempre que a faixa atual mudar (exceto na primeira carga)
+  // Aviso novo a cada troca de faixa (a primeira faixa não gera aviso)
   useEffect(() => {
     if (!currentTrack) return
-    if (isFirstTrackRef.current) {
-      isFirstTrackRef.current = false
+    if (prevTrackRef.current === null) {
+      prevTrackRef.current = currentTrack
       return
     }
-    pushTrackToast(currentTrack.label)
+    if (prevTrackRef.current === currentTrack) return
+    prevTrackRef.current = currentTrack
+    pushToast(currentTrack.label)
   }, [currentTrack]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Limpar todos os timers ao desmontar
+  // Limpar timers ao desmontar
   useEffect(() => {
     const timers = toastTimersRef.current
     return () => {
@@ -98,78 +99,98 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
     }
   }, [])
 
-  // Função para selecionar a próxima faixa na playlist embaralhada
-  const playRandomTrack = () => {
-    if (!hasPlaylist) return
-    const nextIndex = (trackIndex + 1) % shuffledPlaylist.length
-    setTrackIndex(nextIndex)
-    setIsPlaying(true)
-    setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.src = shuffledPlaylist[nextIndex].src
-        audioRef.current.load()
-        audioRef.current.play().catch(() => {})
-      }
-    }, 100)
-  }
+  /* ─── Reprodução ─────────────────────────────────────── */
+  // O <audio> recebe o src pelo React; aqui só controlamos play/pause.
+  // Roda quando troca a faixa ou quando o usuário aperta play/pause.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !currentTrack) return
 
-  // Expor função para uso externo via ref
-  useImperativeHandle(ref, () => ({
-    playRandom: playRandomTrack
-  }))
+    if (!isPlaying) {
+      audio.pause()
+      return
+    }
+
+    const promise = audio.play()
+    if (promise) {
+      promise.catch((err) => {
+        // AbortError = a faixa trocou no meio do carregamento (normal ao pular rápido)
+        if (err.name === 'AbortError') return
+        console.warn('[BackgroundMusic] play() falhou:', err.name, err.message)
+        // Navegador bloqueou o autoplay: volta o botão para "pausado"
+        if (err.name === 'NotAllowedError') setIsPlaying(false)
+      })
+    }
+  }, [isPlaying, currentTrack])
 
   /* sync volume */
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
 
-  /* load new track when index changes */
-  useEffect(() => {
-    if (!audioRef.current || !currentTrack) return
-    audioRef.current.src = currentTrack.src
-    audioRef.current.load()
-    if (isPlaying) audioRef.current.play().catch(() => {})
-  }, [trackIndex, shuffledPlaylist]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* auto-advance to next track when current ends */
-  const handleEnded = () => {
-    if (hasPlaylist) {
-      setTrackIndex((i) => (i + 1) % shuffledPlaylist.length)
-    }
-  }
-
-  const togglePlay = () => {
-    if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      if (currentTrack) audioRef.current.src = currentTrack.src
-      audioRef.current.play().catch(() => {})
-    }
-    setIsPlaying((v) => !v)
+  const nextTrack = () => {
+    if (!hasPlaylist) return
+    setTrackIndex((i) => (i + 1) % total)
   }
 
   const prevTrack = () => {
-    setTrackIndex((i) => (i - 1 + shuffledPlaylist.length) % shuffledPlaylist.length)
+    if (!hasPlaylist) return
+    setTrackIndex((i) => (i - 1 + total) % total)
   }
 
-  const nextTrack = () => {
-    setTrackIndex((i) => (i + 1) % shuffledPlaylist.length)
+  // Avança para a próxima faixa e toca (uso externo via ref)
+  const playRandomTrack = () => {
+    if (!hasPlaylist) return
+    setTrackIndex((i) => (i + 1) % total)
+    setIsPlaying(true)
+  }
+
+  useImperativeHandle(ref, () => ({
+    playRandom: playRandomTrack
+  }))
+
+  /* auto-advance quando a faixa termina */
+  const handleEnded = () => nextTrack()
+
+  /* arquivo não encontrado / formato inválido */
+  const handleError = () => {
+    const audio = audioRef.current
+    console.error(
+      '[BackgroundMusic] Não foi possível carregar o áudio:',
+      currentTrack?.src,
+      '| código:', audio?.error?.code,
+      '| msg:', audio?.error?.message
+    )
+    if (currentTrack) pushToast(`Arquivo não encontrado: ${currentTrack.label}`)
+
+    errorCountRef.current += 1
+    // Se está tocando, pula para a próxima — mas para se todas falharem
+    if (isPlaying && errorCountRef.current < total) nextTrack()
+  }
+
+  const handleCanPlay = () => {
+    errorCountRef.current = 0
+  }
+
+  const togglePlay = () => {
+    if (!currentTrack) return
+    setIsPlaying((v) => !v)
   }
 
   const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value)
-    setVolume(newVolume)
-    if (audioRef.current) audioRef.current.volume = newVolume
+    setVolume(parseFloat(e.target.value))
   }
 
   return (
     <>
       <audio
         ref={audioRef}
-        loop={!hasPlaylist}
+        src={currentTrack?.src}
+        loop={total === 1}
         preload="auto"
         onEnded={handleEnded}
+        onError={handleError}
+        onCanPlay={handleCanPlay}
       />
 
       {/* Headphone warning — aparece inicialmente, some ao clicar */}
@@ -203,7 +224,6 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
       {/* Controles de música — só aparece se showControls for true */}
       {showControls && (
         <div className={styles.musicControl}>
-          {/* Seta anterior — só aparece se houver playlist */}
           {hasPlaylist && (
             <button
               onClick={prevTrack}
@@ -214,7 +234,6 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
             </button>
           )}
 
-          {/* Botão play/pause */}
           <button
             onClick={togglePlay}
             className={styles.playBtn}
@@ -223,7 +242,6 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
             {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
 
-          {/* Slider de volume */}
           <input
             type="range"
             min="0"
@@ -235,7 +253,6 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
             title="Volume"
           />
 
-          {/* Seta próxima — só aparece se houver playlist */}
           {hasPlaylist && (
             <button
               onClick={nextTrack}
