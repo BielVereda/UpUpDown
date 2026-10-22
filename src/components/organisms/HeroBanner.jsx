@@ -16,11 +16,13 @@ export default function HeroBanner() {
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
           className="mx-auto h-40 md:h-64 lg:h-96 w-auto object-contain drop-shadow-[0_0_25px_rgba(255,0,234,.7)]"
         />
+        {/* Subtítulo em fonte pixel (Press Start 2P) — mais larga que a Inter, por isso
+            os tamanhos menores, o leading mais aberto e o max-w maior */}
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="text-base md:text-lg lg:text-2xl text-ink max-w-2xl mx-auto"
+          className="font-pixel text-xs md:text-sm lg:text-lg leading-loose text-ink max-w-3xl mx-auto"
         >
           Preservando a era de ouro dos videogames
         </motion.p>
