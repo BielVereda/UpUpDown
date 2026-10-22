@@ -84,8 +84,8 @@ export default function Intro() {
         )}
       </div>
 
-      {/* Background Music Component - só mostra headphone hint, sem controles */}
-      <BackgroundMusic ref={backgroundMusicRef} showControls={false} showHeadphoneHint={true} />
+      {/* Background Music Component - só para controlar a música, sem UI */}
+      <BackgroundMusic ref={backgroundMusicRef} showControls={false} showHeadphoneHint={false} />
     </div>
   )
 }
