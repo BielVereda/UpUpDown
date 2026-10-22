@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
-import { Volume2, VolumeX, ChevronLeft, ChevronRight, Headphones } from 'lucide-react'
+import { useState, useLayoutEffect, useImperativeHandle, forwardRef, useSyncExternalStore } from 'react'
+import { Play, Pause, ChevronLeft, ChevronRight, Headphones } from 'lucide-react'
 import styles from './BackgroundMusic.module.css'
 
 /**
@@ -45,154 +45,165 @@ const shuffleArray = (array) => {
   return shuffled
 }
 
-const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: showHeadphoneHintProp = true }, ref) => {
-  const [trackIndex, setTrackIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(0.3)
-  const [showHeadphoneHint, setShowHeadphoneHint] = useState(showHeadphoneHintProp)
-  const [trackToasts, setTrackToasts] = useState([]) // [{ id, label }]
-  // Playlist embaralhada uma única vez, já disponível no primeiro render
-  const [shuffledPlaylist] = useState(() => shuffleArray(PLAYLIST))
-  const audioRef = useRef(null)
+/* ═══════════════════════════════════════════════════════════════
+   PLAYER GLOBAL (singleton)
 
-  // Controle dos avisos individuais
-  const toastIdRef = useRef(0)
-  const toastTimersRef = useRef(new Set())
-  const prevTrackRef = useRef(null)
+   O <audio> e o estado da música vivem FORA do React, no escopo do módulo.
+   Assim a música continua tocando quando o usuário troca de página
+   (ex.: Intro → Home) e qualquer instância de <BackgroundMusic /> mostra
+   o mesmo estado (faixa atual, tocando/pausado, volume).
+   ═══════════════════════════════════════════════════════════════ */
+
+const playlist = shuffleArray(PLAYLIST)
+const total = playlist.length
+const audio = typeof Audio === 'undefined' ? null : new Audio()
+
+// Estado compartilhado + assinantes (usado via useSyncExternalStore)
+// hiddenBy = quantas instâncias com showControls={false} estão montadas (ex.: Intro).
+// Enquanto for > 0, NENHUMA instância mostra os controles.
+let state = { index: 0, isPlaying: false, volume: 0.3, toasts: [], hiddenBy: 0 }
+const listeners = new Set()
+const getState = () => state
+const subscribe = (listener) => {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+const setState = (patch) => {
+  state = { ...state, ...patch }
+  listeners.forEach((listener) => listener())
+}
+
+// Cada aviso é um item independente, com id e timer próprios
+let toastId = 0
+function pushToast(label) {
+  const id = ++toastId
+  setState({ toasts: [...state.toasts, { id, label }].slice(-MAX_TOASTS) })
+  setTimeout(() => {
+    setState({ toasts: state.toasts.filter((t) => t.id !== id) })
+  }, TOAST_DURATION)
+}
+
+// Toca a faixa atual. Deve ser chamado direto de um clique/tecla do usuário
+// para o navegador liberar o som.
+function playAudio() {
+  if (!audio) return
+  const promise = audio.play()
+  if (promise) {
+    promise.catch((err) => {
+      // AbortError = a faixa trocou no meio do carregamento (normal ao pular rápido)
+      if (err.name === 'AbortError') return
+      console.warn('[BackgroundMusic] play() falhou:', err.name, err.message)
+      // Navegador bloqueou o autoplay: volta o botão para "pausado"
+      if (err.name === 'NotAllowedError') setState({ isPlaying: false })
+    })
+  }
+}
+
+function selectTrack(index, { play = state.isPlaying } = {}) {
+  if (!audio || total === 0) return
+  const nextIndex = ((index % total) + total) % total
+  audio.src = playlist[nextIndex].src
+  setState({ index: nextIndex, isPlaying: play })
+  pushToast(playlist[nextIndex].label)
+  if (play) playAudio()
+}
+
+const nextTrack = () => selectTrack(state.index + 1)
+const prevTrack = () => selectTrack(state.index - 1)
+
+function togglePlay() {
+  if (!audio || total === 0) return
+  if (state.isPlaying) {
+    audio.pause()
+    setState({ isPlaying: false })
+  } else {
+    setState({ isPlaying: true })
+    playAudio()
+  }
+}
+
+// Usado pela tela de Intro (botão "Press Start"): começa a tocar já com som.
+// Se a música já estiver tocando, não faz nada (não pula de faixa).
+function playRandom() {
+  if (!audio || total === 0 || state.isPlaying) return
+  setState({ isPlaying: true })
+  pushToast(playlist[state.index].label)
+  playAudio()
+}
+
+function setVolume(volume) {
+  if (audio) audio.volume = volume
+  setState({ volume })
+}
+
+// Inicialização do <audio> e dos eventos (uma única vez)
+if (audio && total > 0) {
+  audio.preload = 'auto'
+  audio.volume = state.volume
+  audio.loop = total === 1
+  audio.src = playlist[0].src
+
   // Conta erros de carregamento seguidos (evita loop infinito se nenhum arquivo existir)
-  const errorCountRef = useRef(0)
+  let errorCount = 0
+  const controller = new AbortController()
+  const { signal } = controller
 
-  const total = shuffledPlaylist.length
-  const hasPlaylist = total > 0
-  const currentTrack = shuffledPlaylist[trackIndex] ?? null
-
-  /* ─── Avisos individuais ─────────────────────────────── */
-  const pushToast = (label) => {
-    const id = ++toastIdRef.current
-    setTrackToasts((prev) => [...prev, { id, label }].slice(-MAX_TOASTS))
-
-    const timer = setTimeout(() => {
-      setTrackToasts((prev) => prev.filter((t) => t.id !== id))
-      toastTimersRef.current.delete(timer)
-    }, TOAST_DURATION)
-    toastTimersRef.current.add(timer)
-  }
-
-  // Aviso novo a cada troca de faixa (a primeira faixa não gera aviso)
-  useEffect(() => {
-    if (!currentTrack) return
-    if (prevTrackRef.current === null) {
-      prevTrackRef.current = currentTrack
-      return
-    }
-    if (prevTrackRef.current === currentTrack) return
-    prevTrackRef.current = currentTrack
-    pushToast(currentTrack.label)
-  }, [currentTrack]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Limpar timers ao desmontar
-  useEffect(() => {
-    const timers = toastTimersRef.current
-    return () => {
-      timers.forEach(clearTimeout)
-      timers.clear()
-    }
-  }, [])
-
-  /* ─── Reprodução ─────────────────────────────────────── */
-  // O <audio> recebe o src pelo React; aqui só controlamos play/pause.
-  // Roda quando troca a faixa ou quando o usuário aperta play/pause.
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentTrack) return
-
-    if (!isPlaying) {
-      audio.pause()
-      return
-    }
-
-    const promise = audio.play()
-    if (promise) {
-      promise.catch((err) => {
-        // AbortError = a faixa trocou no meio do carregamento (normal ao pular rápido)
-        if (err.name === 'AbortError') return
-        console.warn('[BackgroundMusic] play() falhou:', err.name, err.message)
-        // Navegador bloqueou o autoplay: volta o botão para "pausado"
-        if (err.name === 'NotAllowedError') setIsPlaying(false)
-      })
-    }
-  }, [isPlaying, currentTrack])
-
-  /* sync volume */
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume
-  }, [volume])
-
-  const nextTrack = () => {
-    if (!hasPlaylist) return
-    setTrackIndex((i) => (i + 1) % total)
-  }
-
-  const prevTrack = () => {
-    if (!hasPlaylist) return
-    setTrackIndex((i) => (i - 1 + total) % total)
-  }
-
-  // Avança para a próxima faixa e toca (uso externo via ref)
-  const playRandomTrack = () => {
-    if (!hasPlaylist) return
-    setTrackIndex((i) => (i + 1) % total)
-    setIsPlaying(true)
-  }
-
-  useImperativeHandle(ref, () => ({
-    playRandom: playRandomTrack
-  }))
-
-  /* auto-advance quando a faixa termina */
-  const handleEnded = () => nextTrack()
-
-  /* arquivo não encontrado / formato inválido */
-  const handleError = () => {
-    const audio = audioRef.current
+  audio.addEventListener('ended', () => nextTrack(), { signal })
+  audio.addEventListener('canplay', () => { errorCount = 0 }, { signal })
+  audio.addEventListener('error', () => {
+    const track = playlist[state.index]
     console.error(
       '[BackgroundMusic] Não foi possível carregar o áudio:',
-      currentTrack?.src,
-      '| código:', audio?.error?.code,
-      '| msg:', audio?.error?.message
+      track?.src,
+      '| código:', audio.error?.code,
+      '| msg:', audio.error?.message
     )
-    if (currentTrack) pushToast(`Arquivo não encontrado: ${currentTrack.label}`)
+    if (track) pushToast(`Arquivo não encontrado: ${track.label}`)
 
-    errorCountRef.current += 1
-    // Se está tocando, pula para a próxima — mas para se todas falharem
-    if (isPlaying && errorCountRef.current < total) nextTrack()
-  }
+    errorCount += 1
+    if (state.isPlaying) {
+      // Pula para a próxima — mas para se todas falharem
+      if (errorCount < total) nextTrack()
+      else setState({ isPlaying: false })
+    }
+  }, { signal })
 
-  const handleCanPlay = () => {
-    errorCountRef.current = 0
+  // Hot reload do Vite: evita ficar com dois players tocando ao editar este arquivo
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      controller.abort()
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.load()
+    })
   }
+}
 
-  const togglePlay = () => {
-    if (!currentTrack) return
-    setIsPlaying((v) => !v)
-  }
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTE — apenas a interface; o áudio é o player global acima
+   ═══════════════════════════════════════════════════════════════ */
 
-  const handleVolumeChange = (e) => {
-    setVolume(parseFloat(e.target.value))
-  }
+const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: showHeadphoneHintProp = true }, ref) => {
+  const { isPlaying, volume, toasts, hiddenBy } = useSyncExternalStore(subscribe, getState)
+  const [showHeadphoneHint, setShowHeadphoneHint] = useState(showHeadphoneHintProp)
+  const hasPlaylist = total > 0
+
+  // Expor função para uso externo via ref
+  useImperativeHandle(ref, () => ({ playRandom }), [])
+
+  // Uma instância com showControls={false} (a tela de Intro) esconde os controles de
+  // TODAS as outras instâncias enquanto estiver montada — mesmo que exista outra
+  // instância num layout global. useLayoutEffect evita um "piscar" dos controles.
+  useLayoutEffect(() => {
+    if (showControls) return
+    setState({ hiddenBy: state.hiddenBy + 1 })
+    return () => setState({ hiddenBy: state.hiddenBy - 1 })
+  }, [showControls])
+
+  const controlsVisible = showControls && hiddenBy === 0
 
   return (
     <>
-      <audio
-        ref={audioRef}
-        src={currentTrack?.src}
-        loop={total === 1}
-        preload="auto"
-        onEnded={handleEnded}
-        onError={handleError}
-        onCanPlay={handleCanPlay}
-      />
-
       {/* Headphone warning — aparece inicialmente, some ao clicar */}
       {showHeadphoneHint && (
         <div
@@ -212,17 +223,19 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
         </div>
       )}
 
-      {/* Avisos de música — um elemento independente por troca de faixa */}
-      <div className={styles.trackNameContainer} aria-live="polite">
-        {trackToasts.map((toast) => (
-          <div key={toast.id} className={styles.trackNameFloat}>
-            {toast.label}
-          </div>
-        ))}
-      </div>
+      {/* Avisos de música — só na instância com controles, para não duplicar */}
+      {controlsVisible && (
+        <div className={styles.trackNameContainer} aria-live="polite">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={styles.trackNameFloat}>
+              {toast.label}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Controles de música — só aparece se showControls for true */}
-      {showControls && (
+      {/* Controles de música — só aparece se showControls for true e nenhuma Intro estiver montada */}
+      {controlsVisible && (
         <div className={styles.musicControl}>
           {hasPlaylist && (
             <button
@@ -238,8 +251,9 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
             onClick={togglePlay}
             className={styles.playBtn}
             title={isPlaying ? 'Pausar música' : 'Tocar música'}
+            aria-label={isPlaying ? 'Pausar música' : 'Tocar música'}
           >
-            {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
 
           <input
@@ -248,7 +262,7 @@ const BackgroundMusic = forwardRef(({ showControls = true, showHeadphoneHint: sh
             max="1"
             step="0.05"
             value={volume}
-            onChange={handleVolumeChange}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
             className={styles.volumeSlider}
             title="Volume"
           />

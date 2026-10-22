@@ -1,8 +1,8 @@
 /* ─── Music Control Widget ───────────────────────────────── */
 .musicControl {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 32px;
+  right: 32px;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -156,8 +156,8 @@
 /* ─── Headphone hint ─────────────────────────────────────── */
 .headphoneHint {
   position: fixed;
-  bottom: 70px;
-  right: 20px;
+  bottom: 90px;
+  right: 32px;
   z-index: 1001;
   display: flex;
   align-items: center;
@@ -211,8 +211,8 @@
 /* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 768px) {
   .musicControl {
-    bottom: 12px;
-    right: 12px;
+    bottom: 20px;
+    right: 20px;
     padding: 8px 10px;
     gap: 6px;
   }
@@ -220,8 +220,8 @@
   .volumeSlider { width: 60px; }
 
   .headphoneHint {
-    bottom: 62px;
-    right: 12px;
+    bottom: 80px;
+    right: 20px;
     max-width: 240px;
   }
 
