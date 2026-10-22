@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/atoms'
-import { SearchBar } from '@/components/molecules'
+import SearchBar from './SearchBar'
 import { useAppStore } from '@/store/useAppStore'
 
 const links = [
@@ -19,7 +19,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-bg/85 backdrop-blur border-b border-neon-magenta/40 shadow-[0_2px_20px_rgba(255,0,234,.2)]">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="max-w-7xl mx-auto px-8 py-4 flex flex-wrap items-center gap-x-6 gap-y-3">
         <Logo />
         <nav className="flex items-center gap-2 md:gap-4 order-3 w-full md:order-none md:w-auto">
           {links.map((l) => (
