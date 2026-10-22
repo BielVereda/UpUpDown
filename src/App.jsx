@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { MainLayout } from '@/components/templates'
+import BackgroundMusic from '@/components/organisms/BackgroundMusic'
 import Intro from '@/pages/Intro'
 import Home from '@/pages/Home'
 import Catalog from '@/pages/Catalog'
@@ -98,5 +99,10 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
-  return <AnimatedRoutes />
+  return (
+    <>
+      <BackgroundMusic showControls={true} showHeadphoneHint={false} />
+      <AnimatedRoutes />
+    </>
+  )
 }
